@@ -14,13 +14,13 @@ class PaymentPlatformsSeederTable extends Seeder
     {
         PaymentPlatform::create([
             'name'=>'Paypal',
-            'image'=>'img/payment-platforms/paypal.jpg',
+            'image'=>'img/payment-platforms/paypal.png',
 
         ]);
 
         PaymentPlatform::create([
             'name'=>'Stripe',
-            'image'=>'img/payment-platforms/stripe.jpg',
+            'image'=>'img/payment-platforms/stripe.png',
 
         ]);
     }
