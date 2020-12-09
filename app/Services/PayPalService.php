@@ -2,6 +2,8 @@
 namespace App\Services;
 
 use App\Traits\consumeExternalServices;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 
 class PayPalService{
     //Send request to paypal through consumeExternalServices
@@ -25,6 +27,44 @@ class PayPalService{
         $credentials = base64_encode("{$this->clientId}:{$this->clientSecret}");
         return "Basic {$credentials}";
     }
+    public function handlePayment(Request $request){
+        //Order creation
+        $order=$this->createOrder($request->value, $request->currency);
+
+        //Obtaining set of links of that order. Array to collection(Transformation). Here $order->links is an array.
+        //Order links are allowed us to search for only that link which their rel value is approved
+        $orderLinks=collect($order->links);
+
+        $approve=$orderLinks->where('rel','approve')->first();
+
+        session()->put('approvalId',$order->id);
+        //Regulate to href of that element
+        return redirect($approve->href);
+
+
+    }
+    public function handleApproval(){
+        if(session()->has('approvalId')){
+            //Getting the approval id
+            $approvalId=session()->get('approvalId');
+            //Here is the payment object
+            $payment=$this->capturePayment($approvalId);
+            //All this stuff comes from the response
+            $name=$payment->payer->name->given_name;
+            $payment=$payment->purchase_units[0]->payments->captures[0]->amount;
+            $amount=$payment->value;
+            $currency=$payment->currency_code;
+            return redirect()
+                ->route('home')
+                ->withSuccess(['payment'=>"Thanks,{$name}. We received your {$amount}{$currency} payment"]);
+
+
+        }
+       return redirect()
+           ->route('home')
+           ->withErrors('We can not capture the payment. Please jump again');
+    }
+
     public function createOrder($value,$currency){
         return $this->makeRequest(
           'POST',
@@ -62,6 +102,7 @@ class PayPalService{
 
         );
     }
+
     public function capturePayment($approvalId){
         return $this->makeRequest(
             'POST',

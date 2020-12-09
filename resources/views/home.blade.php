@@ -28,7 +28,7 @@
                          </div>
                          <div class="col-auto">
                              <label>Currency</label>
-                             <select class="custom-select" name="custom-select" >
+                             <select class="custom-select" name="currency" >
                                  @foreach($currencies as $currency)
                                      <option value="{{$currency->iso}}">
                                          {{strtoupper($currency->iso)}}
